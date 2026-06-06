@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eden – Dečija igraonica (sajt)
 
-## Getting Started
+Marketing sajt za igraonicu **Eden** u Kragujevcu. Izgrađen sa Next.js 16, TypeScript i Tailwind CSS.
 
-First, run the development server:
+## Stranice
+
+- **Početna** (`/`) – hero, ponuda, prednosti, Google recenzije, mapa
+- **Igraonica** (`/igraonica`)
+- **Čuvaonica** (`/cuvaonica`)
+- **Rođendani** (`/rodjendani`) – paketi + **forma za bukiranje**
+- **Kafić** (`/kafic`)
+- **Kontakt** (`/kontakt`)
+
+## Boje i font
+
+| Uloga | Boja |
+|--------|------|
+| Pozadina | `#fff7ed` |
+| Naslovi / elementi | `#385333` |
+| Akcenti | `#8e3232` |
+| Paragrafi | `#828282` |
+
+Font: **Poppins** (Google Fonts)
+
+## Pokretanje
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otvorite [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Prilagođavanje
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+U `src/lib/constants.ts` ažurirajte:
 
-## Learn More
+- telefon, email
+- tekst recenzija (ili povežite Google Places API)
+- cene paketa na stranici Rođendani
 
-To learn more about Next.js, take a look at the following resources:
+Forma za rođendan trenutno prikazuje uspešnu poruku lokalno. Za produkciju povežite API rutu sa email servisom (Resend, SendGrid) ili Formspree.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm start
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Preporučeno: [Vercel](https://vercel.com) ili bilo koji Node hosting.
