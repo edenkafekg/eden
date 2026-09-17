@@ -64,5 +64,16 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "Niste prijavljeni" }, { status: 401 });
   }
-  return NextResponse.json({ session });
+
+  const supabase = createSupabaseAdmin();
+  const { data: shift } = await supabase
+    .from("shifts")
+    .select("id, started_at, ended_at")
+    .eq("id", session.shiftId)
+    .single();
+
+  return NextResponse.json({
+    session,
+    shift: shift ?? null,
+  });
 }

@@ -59,6 +59,11 @@ export function ShiftHistory() {
                 <p className="text-lg font-bold text-eden-accent">
                   {(session.total_rsd ?? 0).toLocaleString("sr-RS")} RSD
                 </p>
+                {(session.discount_rsd ?? 0) > 0 && (
+                  <p className="text-xs text-eden-accent">
+                    −{session.discount_rsd?.toLocaleString("sr-RS")} ({session.discount_percent}%)
+                  </p>
+                )}
               </div>
             </AppCard>
           );

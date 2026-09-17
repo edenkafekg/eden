@@ -80,6 +80,9 @@ export interface Database {
           checked_in_at: string;
           checked_out_at: string | null;
           billing_breakdown: BillingLine[] | null;
+          subtotal_rsd: number | null;
+          discount_percent: number;
+          discount_rsd: number;
           total_rsd: number | null;
           daycare_billing_mode: DaycareBillingMode | null;
           created_at: string;
@@ -93,6 +96,9 @@ export interface Database {
           checked_in_at: string;
           checked_out_at?: string | null;
           billing_breakdown?: BillingLine[] | null;
+          subtotal_rsd?: number | null;
+          discount_percent?: number;
+          discount_rsd?: number;
           total_rsd?: number | null;
           daycare_billing_mode?: DaycareBillingMode | null;
           created_at?: string;
@@ -106,6 +112,9 @@ export interface Database {
           checked_in_at?: string;
           checked_out_at?: string | null;
           billing_breakdown?: BillingLine[] | null;
+          subtotal_rsd?: number | null;
+          discount_percent?: number;
+          discount_rsd?: number;
           total_rsd?: number | null;
           daycare_billing_mode?: DaycareBillingMode | null;
           created_at?: string;

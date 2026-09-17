@@ -4,18 +4,22 @@ import {
   calculatePlayBilling,
   getRecommendedDaycareOption,
 } from "@/lib/pricing/playroom-pricing";
+import { applyDiscount } from "@/lib/pricing/discount";
 import { getStaffSession } from "@/lib/app/session-auth";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import type { DaycareBillingMode } from "@/lib/supabase/types";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const session = await getStaffSession();
     if (!session) {
       return NextResponse.json({ error: "Niste prijavljeni" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const discountPercent = Number(searchParams.get("discountPercent") ?? "0");
 
     const { id } = await context.params;
     const supabase = createSupabaseAdmin();
@@ -39,13 +43,25 @@ export async function GET(_request: Request, context: RouteContext) {
 
     if (data.type === "igra") {
       const billing = calculatePlayBilling(childCount, checkIn, checkOut);
-      return NextResponse.json({ session: data, preview: { type: "igra", billing } });
+      const priced = applyDiscount(billing.totalRsd, discountPercent);
+      return NextResponse.json({
+        session: data,
+        preview: { type: "igra", billing, pricing: priced },
+      });
     }
 
     const billing = calculateDaycareBilling(childCount, checkIn, checkOut);
+    const recommended = getRecommendedDaycareOption(billing);
     return NextResponse.json({
       session: data,
-      preview: { type: "cuvaonica", billing, recommended: getRecommendedDaycareOption(billing) },
+      preview: {
+        type: "cuvaonica",
+        billing,
+        recommended,
+        pricingByMode: Object.fromEntries(
+          billing.options.map((o) => [o.mode, applyDiscount(o.totalRsd, discountPercent)]),
+        ),
+      },
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Greška";
@@ -61,7 +77,10 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const body = (await request.json()) as { daycareMode?: DaycareBillingMode };
+    const body = (await request.json()) as {
+      daycareMode?: DaycareBillingMode;
+      discountPercent?: number;
+    };
     const supabase = createSupabaseAdmin();
 
     const { data, error } = await supabase
@@ -80,13 +99,13 @@ export async function POST(request: Request, context: RouteContext) {
     const checkOut = new Date();
 
     let billingBreakdown;
-    let totalRsd;
     let daycareBillingMode: DaycareBillingMode | null = null;
+    let subtotalRsd: number;
 
     if (data.type === "igra") {
       const billing = calculatePlayBilling(childCount, checkIn, checkOut);
       billingBreakdown = billing.lines;
-      totalRsd = billing.totalRsd;
+      subtotalRsd = billing.totalRsd;
     } else {
       const billing = calculateDaycareBilling(childCount, checkIn, checkOut);
       const mode = body.daycareMode ?? getRecommendedDaycareOption(billing).mode;
@@ -95,9 +114,11 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Neispravan način naplate" }, { status: 400 });
       }
       billingBreakdown = option.lines;
-      totalRsd = option.totalRsd;
+      subtotalRsd = option.totalRsd;
       daycareBillingMode = mode;
     }
+
+    const priced = applyDiscount(subtotalRsd, body.discountPercent ?? 0);
 
     const { data: updated, error: updateError } = await supabase
       .from("sessions")
@@ -105,7 +126,10 @@ export async function POST(request: Request, context: RouteContext) {
         status: "closed",
         checked_out_at: checkOut.toISOString(),
         billing_breakdown: billingBreakdown,
-        total_rsd: totalRsd,
+        subtotal_rsd: priced.subtotalRsd,
+        discount_percent: priced.discountPercent,
+        discount_rsd: priced.discountRsd,
+        total_rsd: priced.totalRsd,
         daycare_billing_mode: daycareBillingMode,
       })
       .eq("id", id)
@@ -114,7 +138,11 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (updateError) throw updateError;
 
-    return NextResponse.json({ session: updated, totalRsd, billingBreakdown });
+    return NextResponse.json({
+      session: updated,
+      ...priced,
+      billingBreakdown,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Greška";
     return NextResponse.json({ error: message }, { status: 500 });

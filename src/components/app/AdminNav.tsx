@@ -8,6 +8,7 @@ export function AdminNav() {
 
   const links = [
     { href: "/app/admin", label: "Pregled" },
+    { href: "/app/admin/shifts", label: "Smene" },
     { href: "/app/admin/staff", label: "Radnice" },
   ];
 

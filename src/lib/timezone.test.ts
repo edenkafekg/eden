@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatDatetimeLocalInEden,
   getEdenDayBounds,
+  getEdenMonthBounds,
   getEdenTodayIso,
   parseDatetimeLocalInEden,
 } from "./timezone";
@@ -26,5 +27,11 @@ describe("timezone Europe/Belgrade", () => {
   it("uses Belgrade calendar date near midnight UTC", () => {
     const utc = new Date("2026-06-12T22:52:00.000Z");
     expect(getEdenTodayIso(utc)).toBe("2026-06-13");
+  });
+
+  it("returns Belgrade month bounds", () => {
+    const { start, end } = getEdenMonthBounds("2026-06");
+    expect(start).toBe("2026-05-31T22:00:00.000Z");
+    expect(end).toBe("2026-06-30T21:59:59.999Z");
   });
 });

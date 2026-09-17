@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ShiftTimer } from "@/components/app/ShiftTimer";
 
 const links = [
   { href: "/app/active", label: "Aktivno" },
@@ -18,6 +19,7 @@ export function AppNav({ staffName }: { staffName?: string }) {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-eden-accent">Eden Tracker</p>
           {staffName && <p className="text-sm text-eden-paragraph">{staffName}</p>}
+          {staffName && <ShiftTimer />}
         </div>
         <button
           type="button"
@@ -31,7 +33,7 @@ export function AppNav({ staffName }: { staffName?: string }) {
           }}
           className="text-sm font-semibold text-eden-headline"
         >
-          Odjava
+          Završi smenu
         </button>
       </div>
       <nav className="mx-auto flex max-w-lg gap-1 px-4 pb-3">

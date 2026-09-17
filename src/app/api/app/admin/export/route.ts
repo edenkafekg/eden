@@ -54,7 +54,10 @@ export async function GET(request: Request) {
       "Sto",
       "Deca",
       "Radnica",
-      "Ukupno RSD",
+      "Pre popusta RSD",
+      "Popust %",
+      "Popust RSD",
+      "Za naplatu RSD",
       "Stavke",
     ].join(",");
 
@@ -74,6 +77,9 @@ export async function GET(request: Request) {
         s.table_number ?? "",
         children,
         staffName,
+        s.subtotal_rsd ?? s.total_rsd ?? 0,
+        s.discount_percent ?? 0,
+        s.discount_rsd ?? 0,
         s.total_rsd ?? 0,
         lines,
       ]

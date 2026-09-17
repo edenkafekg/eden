@@ -16,6 +16,9 @@ export function AdminDashboard() {
   const [date, setDate] = useState(todayIso());
   const [sessions, setSessions] = useState<SessionWithChildren[]>([]);
   const [totalRsd, setTotalRsd] = useState(0);
+  const [subtotalRsd, setSubtotalRsd] = useState(0);
+  const [totalDiscountRsd, setTotalDiscountRsd] = useState(0);
+  const [discountedSessionCount, setDiscountedSessionCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,6 +38,9 @@ export function AdminDashboard() {
       }
       setSessions(data.sessions ?? []);
       setTotalRsd(data.totalRsd ?? 0);
+      setSubtotalRsd(data.subtotalRsd ?? 0);
+      setTotalDiscountRsd(data.totalDiscountRsd ?? 0);
+      setDiscountedSessionCount(data.discountedSessionCount ?? 0);
       setLoading(false);
     }
     load();
@@ -65,12 +71,28 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <AppCard className="mt-6">
-          <p className="text-sm text-eden-paragraph">Ukupno za izabrani dan</p>
-          <p className="text-3xl font-bold text-eden-headline">
-            {totalRsd.toLocaleString("sr-RS")} RSD
-          </p>
-        </AppCard>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <AppCard>
+            <p className="text-sm text-eden-paragraph">Naplaćeno (posle popusta)</p>
+            <p className="text-3xl font-bold text-eden-headline">
+              {totalRsd.toLocaleString("sr-RS")} RSD
+            </p>
+          </AppCard>
+          <AppCard>
+            <p className="text-sm text-eden-paragraph">Pre popusta</p>
+            <p className="text-2xl font-bold text-eden-headline">
+              {subtotalRsd.toLocaleString("sr-RS")} RSD
+            </p>
+          </AppCard>
+          <AppCard>
+            <p className="text-sm text-eden-paragraph">
+              Popusti ({discountedSessionCount} naplata)
+            </p>
+            <p className="text-2xl font-bold text-eden-accent">
+              −{totalDiscountRsd.toLocaleString("sr-RS")} RSD
+            </p>
+          </AppCard>
+        </div>
 
         {error && <p className="mt-4 text-eden-accent">{error}</p>}
         {loading ? (
@@ -120,6 +142,12 @@ export function AdminDashboard() {
                       <p className="text-xl font-bold text-eden-accent">
                         {(session.total_rsd ?? 0).toLocaleString("sr-RS")} RSD
                       </p>
+                      {(session.discount_rsd ?? 0) > 0 && (
+                        <p className="text-xs text-eden-paragraph">
+                          Popust {session.discount_percent}% (−
+                          {(session.discount_rsd ?? 0).toLocaleString("sr-RS")} RSD)
+                        </p>
+                      )}
                     </div>
                   </AppCard>
                 );

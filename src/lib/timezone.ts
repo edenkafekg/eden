@@ -74,6 +74,35 @@ export function getEdenDayBounds(dateYmd: string): { start: string; end: string 
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
+/** YYYY-MM for current month in Belgrade. */
+export function getEdenCurrentMonthIso(date = new Date()): string {
+  const p = getEdenParts(date);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${p.year}-${pad(p.month)}`;
+}
+
+/** UTC ISO bounds for a calendar month in Belgrade (YYYY-MM). */
+export function getEdenMonthBounds(yearMonth: string): { start: string; end: string } {
+  const [yearStr, monthStr] = yearMonth.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const start = parseDatetimeLocalInEden(`${year}-${pad(month)}-01T00:00`);
+  const nextMonth =
+    month === 12 ? `${year + 1}-01` : `${year}-${pad(month + 1)}`;
+  const nextStart = parseDatetimeLocalInEden(`${nextMonth}-01T00:00`);
+  const end = new Date(nextStart.getTime() - 1);
+
+  return { start: start.toISOString(), end: end.toISOString() };
+}
+
+export function formatEdenMonthLabel(yearMonth: string): string {
+  const [year, month] = yearMonth.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, 1));
+  return date.toLocaleDateString("sr-RS", { month: "long", year: "numeric", timeZone: EDEN_TIMEZONE });
+}
+
 const defaultDateTimeOptions: Intl.DateTimeFormatOptions = {
   timeZone: EDEN_TIMEZONE,
   day: "2-digit",

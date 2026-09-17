@@ -29,12 +29,18 @@ create table if not exists sessions (
   checked_in_at timestamptz not null,
   checked_out_at timestamptz,
   billing_breakdown jsonb,
+  subtotal_rsd int,
+  discount_percent int not null default 0,
+  discount_rsd int not null default 0,
   total_rsd int,
   daycare_billing_mode text check (daycare_billing_mode is null or daycare_billing_mode in ('hourly', 'full_day')),
   created_at timestamptz not null default now(),
   constraint table_required_for_igra check (
     (type = 'igra' and table_number is not null) or
     (type = 'cuvaonica' and table_number is null)
+  ),
+  constraint sessions_discount_percent_check check (
+    discount_percent >= 0 and discount_percent <= 100
   )
 );
 

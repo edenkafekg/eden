@@ -39,9 +39,21 @@ export async function GET(request: Request) {
     if (error) throw error;
 
     const sessions = (data ?? []) as SessionWithChildren[];
-    const total = sessions.reduce((sum, s) => sum + (s.total_rsd ?? 0), 0);
+    const totalRsd = sessions.reduce((sum, s) => sum + (s.total_rsd ?? 0), 0);
+    const subtotalRsd = sessions.reduce(
+      (sum, s) => sum + (s.subtotal_rsd ?? s.total_rsd ?? 0),
+      0,
+    );
+    const totalDiscountRsd = sessions.reduce((sum, s) => sum + (s.discount_rsd ?? 0), 0);
+    const discountedSessionCount = sessions.filter((s) => (s.discount_rsd ?? 0) > 0).length;
 
-    return NextResponse.json({ sessions, totalRsd: total });
+    return NextResponse.json({
+      sessions,
+      totalRsd,
+      subtotalRsd,
+      totalDiscountRsd,
+      discountedSessionCount,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Greška";
     return NextResponse.json({ error: message }, { status: 500 });
