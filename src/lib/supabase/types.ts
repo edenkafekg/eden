@@ -158,6 +158,24 @@ export interface Database {
           },
         ];
       };
+      invoice_checklist: {
+        Row: {
+          item_id: string;
+          checked: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          item_id: string;
+          checked?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          item_id?: string;
+          checked?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

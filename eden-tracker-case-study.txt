@@ -1,0 +1,90 @@
+CASE STUDY: Eden Tracker
+Agencija → Eden Cafe & Kids Playground (Kragujevac)
+────────────────────────────────────────────────────
+
+KLIJENT
+Eden — kafić i dečija igraonica. Svakodnevno više dece, više stolova, smene radnica i naplata koja zavisi od tipa usluge, broja dece i vremena boravka.
+
+
+PROBLEM
+Pre alata, radnice su vreme, naplatu i smene držale „u glavi“ ili na papiru.
+
+To je stvaralo:
+• Greške u naplati — pogotovo kad ima više dece ili duži boravak
+• Sporiji checkout — računanje u trenutku dok roditelj čeka
+• Nejasne smene — ko je koliko radio nije bilo pouzdano evidentirano
+• Slab uvid za vlasnika — teško je videti promet, popuste i sate rada po danu/mesecu
+• Bezbednosni rizik — interni proces nije smeo biti javan deo sajta
+
+Cilj: mobilni alat koji radnice koriste na telefonu, a vlasnik ima online pregled i kontrolu.
+
+
+REŠENJE
+Razvili smo Eden Tracker — interni operativni sistem uz postojeći sajt.
+
+Jedan alat pokriva:
+1. Ulazak / izlazak dece
+2. Automatsku naplatu
+3. Praćenje smena radnica
+4. Admin analitiku i izveštaje
+
+
+ŠTA JE SVE URAĐENO
+
+Za radnice (telefon)
+• Prijava PIN-om
+• Početak smene izborom imena
+• Evidencija ulaska (sto / čuvaonica, broj dece, imena, vreme)
+• Pregled aktivnih sesija u realnom vremenu
+• Naplata jednim klikom — sistem sam izračuna iznos
+• Opcija popusta (npr. 10%, 20% ili custom) za stalne goste
+• Završetak smene i dnevni pregled naplata
+
+Za vlasnika (admin)
+• Online pregled naplata po danu
+• Pregled popusta i prometa
+• Praćenje smena: ko je radio, koliko sati, šta je naplatio
+• Mesečni izveštaj po radnici
+• Export CSV za knjigovodstvo / arhivu
+• Upravljanje listom radnica
+
+
+KAKO SAD IZGLEDA PROCES
+1. Radnica se uloguje i započne smenu
+2. Kad dete/deca uđu — unese tip usluge, sto (ako je igra), imena i vreme
+3. Tokom dana vidi ko je unutra i koliko traje boravak
+4. Pri izlasku klikne naplatu → vidi stavke za kasu + ukupan iznos (sa ili bez popusta)
+5. Na kraju dana završi smenu
+6. Vlasnik online vidi promet, popuste i sate rada (dan / mesec)
+
+Rezultat: brži checkout, manje grešaka, jasna odgovornost po smeni.
+
+
+LOGIKE UGRAĐENE U ALAT (biznis nivo)
+• Različite cene za igru i čuvanje
+• Grupisanje dece (1 / 2+) u skladu sa cenovnikom
+• Bafer vremena + zaokruživanje trajanja po pravilima lokala
+• Čuvaonica: sistem predlaže jeftiniju opciju (po satu vs celodnevno)
+• Popust se beleži u statistiku (ne „nestaje“ van evidencije)
+• Smena se beleži od ulaska do završetka rada
+
+
+TEHNOLOGIJE / ALATI
+• Web aplikacija — moderni web stack, mobilni-first
+• Baza — cloud PostgreSQL (Supabase)
+• Hosting sajta — Netlify
+• Pristup — odvojen interni modul + PIN / admin lozinka
+• Vreme — lokalna zona (Beograd) radi tačne evidencije
+• Izveštaji — CSV export za mesečne/dnevne preglede
+
+
+POSLOVNI EFEKAT
+• Manje grešaka na kasi
+• Brži rad radnica na telefonu
+• Transparentne smene (sati + promet po osobi)
+• Kontrola popusta i bolji uvid u realan promet
+• Jedan sistem umesto papira + WhatsApp + memorije
+
+
+TAGLINE ZA PORTFOLIO
+Od papira i improvisacije — do mobilnog operativnog sistema za igraonicu: ulazak dece, naplata, smene i mesečni izveštaji na jednom mestu.

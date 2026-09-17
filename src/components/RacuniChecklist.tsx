@@ -196,53 +196,128 @@ const GROUPS: ChecklistGroup[] = [
   },
 ];
 
-const STORAGE_KEY = "eden-racuni-checklist-v1";
-
-function loadChecked(): Record<string, boolean> {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
-  } catch {
-    return {};
-  }
-}
+const POLL_MS = 4000;
 
 export function RacuniChecklist() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [ready, setReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState("");
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [filter, setFilter] = useState<"all" | "open" | "done">("all");
 
-  useEffect(() => {
-    setChecked(loadChecked());
-    setReady(true);
-  }, []);
+  async function fetchChecked(silent = false) {
+    if (!silent) setSyncing(true);
+    try {
+      const res = await fetch("/api/interni-racuni/checklist", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) {
+        setSyncError(data.error ?? "Greška pri učitavanju");
+        return;
+      }
+      setChecked(data.checked ?? {});
+      setSyncError("");
+      setLastSyncedAt(new Date());
+    } catch {
+      setSyncError("Nema veze sa serverom");
+    } finally {
+      if (!silent) setSyncing(false);
+      setReady(true);
+    }
+  }
 
   useEffect(() => {
-    if (!ready) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
-  }, [checked, ready]);
+    fetchChecked();
+    const id = setInterval(() => fetchChecked(true), POLL_MS);
+    const onFocus = () => fetchChecked(true);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
 
   const allItems = useMemo(() => GROUPS.flatMap((g) => g.items), []);
   const doneCount = allItems.filter((i) => checked[i.id]).length;
   const totalCount = allItems.length;
   const progress = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
 
-  function toggle(id: string) {
-    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+  async function toggle(id: string) {
+    const nextValue = !checked[id];
+    setChecked((prev) => ({ ...prev, [id]: nextValue }));
+    try {
+      const res = await fetch("/api/interni-racuni/checklist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: id, checked: nextValue }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setSyncError(data.error ?? "Greška pri snimanju");
+        setChecked((prev) => ({ ...prev, [id]: !nextValue }));
+      } else {
+        setSyncError("");
+        setLastSyncedAt(new Date());
+      }
+    } catch {
+      setSyncError("Nema veze sa serverom");
+      setChecked((prev) => ({ ...prev, [id]: !nextValue }));
+    }
   }
 
-  function toggleGroup(group: ChecklistGroup, value: boolean) {
+  async function toggleGroup(group: ChecklistGroup, value: boolean) {
+    const previous = { ...checked };
     setChecked((prev) => {
       const next = { ...prev };
       for (const item of group.items) next[item.id] = value;
       return next;
     });
+    try {
+      const res = await fetch("/api/interni-racuni/checklist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: group.items.map((item) => ({ itemId: item.id, checked: value })),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setSyncError(data.error ?? "Greška pri snimanju");
+        setChecked(previous);
+      } else {
+        setSyncError("");
+        setLastSyncedAt(new Date());
+      }
+    } catch {
+      setSyncError("Nema veze sa serverom");
+      setChecked(previous);
+    }
   }
 
-  function resetAll() {
-    if (!confirm("Resetovati sve čekirane stavke?")) return;
+  async function resetAll() {
+    if (!confirm("Resetovati sve čekirane stavke za sve koji koriste listu?")) return;
+    const previous = { ...checked };
     setChecked({});
+    try {
+      const res = await fetch("/api/interni-racuni/checklist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: allItems.map((item) => ({ itemId: item.id, checked: false })),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setSyncError(data.error ?? "Greška pri resetu");
+        setChecked(previous);
+      } else {
+        setSyncError("");
+        setLastSyncedAt(new Date());
+      }
+    } catch {
+      setSyncError("Nema veze sa serverom");
+      setChecked(previous);
+    }
   }
 
   return (
@@ -256,8 +331,8 @@ export function RacuniChecklist() {
             Checklist nedostajućih računa
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#57534e] sm:text-base">
-            Čekiraj račune koje pronađeš. Stanje se čuva u ovom browseru (localStorage).
-            Stranica nije linkovana sa sajta.
+            Čekiraj račune koje pronađeš. Stanje je deljeno — drugi browser / osoba vidi iste
+            čekove (osvežava se automatski). Stranica nije linkovana sa sajta.
           </p>
 
           <div className="mt-6 rounded-2xl border border-[#d6d3d1] bg-white p-5 shadow-sm">
@@ -265,10 +340,19 @@ export function RacuniChecklist() {
               <div>
                 <p className="text-sm text-[#78716c]">Napredak</p>
                 <p className="text-2xl font-bold">
-                  {doneCount} / {totalCount}
+                  {ready ? doneCount : "…"} / {totalCount}
                   <span className="ml-2 text-base font-semibold text-[#8e3232]">
-                    ({progress}%)
+                    ({ready ? progress : 0}%)
                   </span>
+                </p>
+                <p className="mt-1 text-xs text-[#a8a29e]">
+                  {syncError
+                    ? `Greška: ${syncError}`
+                    : syncing
+                      ? "Sinhronizacija..."
+                      : lastSyncedAt
+                        ? `Deljeno · ažurirano ${lastSyncedAt.toLocaleTimeString("sr-RS")}`
+                        : "Učitavanje..."}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -360,17 +444,32 @@ export function RacuniChecklist() {
                     const isDone = !!checked[item.id];
                     return (
                       <li key={item.id}>
-                        <label
-                          className={`flex cursor-pointer items-start gap-3 px-5 py-4 transition ${
+                        <button
+                          type="button"
+                          onClick={() => toggle(item.id)}
+                          className={`flex w-full items-start gap-3 px-5 py-4 text-left transition ${
                             isDone ? "bg-[#f0fdf4]" : "hover:bg-[#fafaf9]"
                           }`}
                         >
-                          <input
-                            type="checkbox"
-                            checked={isDone}
-                            onChange={() => toggle(item.id)}
-                            className="mt-1 h-5 w-5 shrink-0 rounded border-[#a8a29e] text-[#385333] focus:ring-[#385333]"
-                          />
+                          <span
+                            className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 ${
+                              isDone
+                                ? "border-[#166534] bg-[#166534] text-white"
+                                : "border-[#a8a29e] bg-white"
+                            }`}
+                            aria-hidden
+                          >
+                            {isDone ? (
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            ) : null}
+                          </span>
                           <span className="min-w-0 flex-1">
                             <span
                               className={`block font-medium ${
@@ -390,7 +489,7 @@ export function RacuniChecklist() {
                               </span>
                             )}
                           </span>
-                        </label>
+                        </button>
                       </li>
                     );
                   })}

@@ -10,6 +10,7 @@
 1. U Supabase dashboardu: **SQL Editor → New query**
 2. Kopiraj sadržaj fajla [`schema.sql`](./schema.sql) i klikni **Run**
 3. Ako već imaš bazu, pokreni i [`migrations/002_shifts_discounts.sql`](./migrations/002_shifts_discounts.sql) za smene i popuste
+4. (Opciono) Stara tabela za checklistu: [`migrations/003_invoice_checklist.sql`](./migrations/003_invoice_checklist.sql) — checklista na `/interni-racuni` sada koristi lokalni/Netlify store, ne ovu tabelu.
 
 ## 3. Env varijable
 
